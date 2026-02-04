@@ -62,6 +62,27 @@
             color: #666;
         }
 
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .start-btn:hover {
+            background: #45a049;
+        }
+
+        .start-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
         .game-over {
             position: fixed;
             top: 50%;
@@ -171,7 +192,8 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <div class="controls">
             <p>使用方向键或 WASD 控制移动</p>
-            <button class="restart-btn" onclick="startGame()">重新开始</button>
+            <button class="start-btn" id="startBtn" onclick="startGame()">开始游戏</button>
+            <button class="restart-btn" id="restartBtn" onclick="restartGame()" disabled>重新开始</button>
         </div>
     </div>
 
@@ -188,7 +210,7 @@
     <div class="game-over" id="gameOver">
         <h2>游戏结束！</h2>
         <p>你的分数: <span id="finalScore">0</span></p>
-        <button onclick="startGame()">再玩一次</button>
+        <button onclick="restartGame()">再玩一次</button>
     </div>
 
     <script>
@@ -206,6 +228,7 @@
         let gameLoop;
         let gameSpeed = 100;
         let isGameOver = false;
+        let isGameRunning = false;
 
         document.getElementById('highScore').textContent = highScore;
 
@@ -215,8 +238,13 @@
             dy = 0;
             score = 0;
             isGameOver = false;
+            isGameRunning = false;
             document.getElementById('score').textContent = score;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('restartBtn').disabled = true;
+            document.getElementById('startBtn').textContent = '开始游戏';
             spawnFood();
+            drawGame();
         }
 
         function spawnFood() {
@@ -260,7 +288,7 @@
         }
 
         function updateGame() {
-            if (isGameOver) return;
+            if (isGameOver || !isGameRunning) return;
 
             // 移动蛇
             const head = {x: snake[0].x + dx, y: snake[0].y + dy};
@@ -300,6 +328,7 @@
 
         function gameOver() {
             isGameOver = true;
+            isGameRunning = false;
             clearInterval(gameLoop);
 
             if (score > highScore) {
@@ -311,19 +340,32 @@
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOverOverlay').style.display = 'block';
             document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('restartBtn').disabled = false;
+            document.getElementById('startBtn').textContent = '开始游戏';
         }
 
         function startGame() {
+            if (isGameRunning) return;
+
+            isGameRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('restartBtn').disabled = false;
+            document.getElementById('startBtn').textContent = '游戏中...';
+
+            gameLoop = setInterval(updateGame, gameSpeed);
+        }
+
+        function restartGame() {
             if (gameLoop) clearInterval(gameLoop);
             gameSpeed = 100;
             initGame();
-            gameLoop = setInterval(drawGame, gameSpeed);
-            document.getElementById('gameOverOverlay').style.display = 'none';
-            document.getElementById('gameOver').style.display = 'none';
         }
 
         // 键盘控制
         document.addEventListener('keydown', (e) => {
+            if (!isGameRunning) return;
+
             switch(e.key) {
                 case 'ArrowUp':
                 case 'w':
@@ -358,6 +400,8 @@
 
         // 移动端控制
         function changeDirection(direction) {
+            if (!isGameRunning) return;
+
             switch(direction) {
                 case 'up':
                     if (dy !== 1) { dx = 0; dy = -1; }
@@ -400,11 +444,6 @@
 
         // 初始化游戏
         initGame();
-        drawGame();
-        // 等待一小会儿后启动游戏循环
-        setTimeout(() => {
-            startGame();
-        }, 100);
     </script>
 </body>
 </html>

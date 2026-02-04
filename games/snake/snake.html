@@ -52,6 +52,8 @@
             border: 4px solid #667eea;
             border-radius: 10px;
             background: #f0f0f0;
+            display: block;
+            margin: 0 auto;
         }
 
         .controls {
@@ -399,6 +401,10 @@
         // 初始化游戏
         initGame();
         drawGame();
+        // 等待一小会儿后启动游戏循环
+        setTimeout(() => {
+            startGame();
+        }, 100);
     </script>
 </body>
 </html>

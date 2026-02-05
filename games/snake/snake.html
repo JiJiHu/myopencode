@@ -933,7 +933,39 @@
         function restartGame() {
             if (gameLoop) clearInterval(gameLoop);
             gameSpeed = config[currentDifficulty].speed;
-            initGame();
+            initGame();initGame();
+  
+  // 恢复游戏状态（如果有）
+  (function restoreGame() {
+    const savedState = localStorage.getItem('snakeGameState');
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        if (state.snake && state.snake.length > 0 && !confirm('检测到未完成的游戏，是否继续？')) {
+          localStorage.removeItem('snakeGameState');
+          return;
+        }
+        snake = state.snake;
+        food = state.food;
+        dx = state.dx;
+        dy = state.dy;
+        score = state.score;
+        level = state.level;
+        currentDifficulty = state.difficulty;
+        gameSpeed = config[currentDifficulty].speed;
+        isGameRunning = false;
+        isPaused = true;
+        document.getElementById('score').textContent = score;
+        document.getElementById('level').textContent = level;
+        document.getElementById('pauseBtn').textContent = '继续';
+        document.getElementById('pauseBtn').disabled = false;
+        document.getElementById('restartBtn').disabled = false;
+        drawGame();
+      } catch(e) {
+        localStorage.removeItem('snakeGameState');
+      }
+    }
+  })();
         }
 
         // 切换设置面板

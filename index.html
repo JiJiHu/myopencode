@@ -69,7 +69,11 @@
             color: white;
         }
 
-        .game-item:hover {
+        kbd {
+  font-family: monospace;
+  font-size: 0.9em;
+}
+.game-item:hover {
             background: rgba(255,255,255,0.2);
             transform: translateX(5px);
         }
@@ -263,7 +267,13 @@
                         <h3>贪吃蛇</h3>
                         <p>经典街机游戏</p>
                     </div>
-                </li>
+                </li><li class="game-item" onclick="showHelp()">
+          <span class="game-item-icon">❓</span>
+          <div class="game-item-info">
+            <h3>快捷键帮助</h3>
+            <p>查看所有快捷键</p>
+          </div>
+        </li>
 
                 <li class="game-item" onclick="showGame('gomoku')">
                     <span class="game-item-icon">⚫⚪</span>
@@ -329,7 +339,46 @@
             }
         }
 
-        function showHome() {
+        function showHelp() {
+  const viewer = document.getElementById('gameViewer');
+  viewer.innerHTML = `
+    <button class="back-btn" onclick="showHome()">← 返回</button>
+    <div style="max-width:600px;padding:40px;overflow-y:auto;">
+      <h2 style="color:#667eea;margin-bottom:30px;text-align:center;">⌨️ 快捷键指南</h2>
+      
+      <div style="background:#f8f9fa;padding:20px;border-radius:15px;margin-bottom:20px;">
+        <h3 style="color:#333;margin-bottom:15px;">🐍 贪吃蛇</h3>
+        <ul style="list-style:none;padding:0;color:#666;">
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">↑ ↓ ← →</kbd> 或 <kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">W A S D</kbd> - 控制方向</li>
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">Space</kbd> / <kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">P</kbd> - 暂停/继续</li>
+          <li style="padding:8px 0;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">P</kbd> - 暂停游戏</li>
+        </ul>
+      </div>
+      
+      <div style="background:#f8f9fa;padding:20px;border-radius:15px;margin-bottom:20px;">
+        <h3 style="color:#333;margin-bottom:15px;">⚫ 五子棋</h3>
+        <ul style="list-style:none;padding:0;color:#666;">
+          <li style="padding:8px 0;">🖱️ <strong>左键点击</strong> - 落子</li>
+          <li style="padding:8px 0;">🖱️ <strong>鼠标悬停</strong> - 预览落子位置</li>
+        </ul>
+      </div>
+      
+      <div style="background:#f8f9fa;padding:20px;border-radius:15px;">
+        <h3 style="color:#333;margin-bottom:15px;">🔢 数独</h3>
+        <ul style="list-style:none;padding:0;color:#666;">
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">1-9</kbd> - 填入数字</li>
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">↑ ↓ ← →</kbd> - 移动光标</li>
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">Ctrl</kbd> + <kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">Z</kbd> - 撤销上一步</li>
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">Backspace</kbd> / <kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">Delete</kbd> - 清除格子</li>
+          <li style="padding:8px 0;border-bottom:1px solid #eee;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">P</kbd> - 暂停计时</li>
+          <li style="padding:8px 0;"><kbd style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #ddd;">H</kbd> - 显示此帮助</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function showHome() {
             const viewer = document.getElementById('gameViewer');
             const gameItems = document.querySelectorAll('.game-item');
 

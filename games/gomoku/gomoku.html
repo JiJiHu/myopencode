@@ -549,7 +549,30 @@
 
         // 初始化游戏
         initBoard();
-        drawBoard();
-    </script>
+        drawBoard();;
+  
+  // 鼠标悬停预览功能
+  canvas.addEventListener('mousemove', (e) => {
+    if (gameOver) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / cellSize);
+    const y = Math.floor((e.clientY - rect.top) / cellSize);
+    if (x >= 0 && x < boardSize && y >= 0 && y < boardSize && board[x][y] === 0) {
+      drawBoard();
+      const centerX = x * cellSize + cellSize / 2;
+      const centerY = y * cellSize + cellSize / 2;
+      const radius = cellSize / 2 - 4;
+      const ctx = canvas.getContext('2d');
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = currentPlayer === 1 ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.7)';
+      ctx.fill();
+      ctx.strokeStyle = currentPlayer === 1 ? '#333' : '#999';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+  
+  canvas.addEventListener('mouseleave', drawBoard)    </script>
 </body>
 </html>

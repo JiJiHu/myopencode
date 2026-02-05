@@ -395,7 +395,7 @@ function initGrid() {
   const blockOrder=[[0,1,2],[1,0,2],[2,1,0]][rand(3)];
   const newGrid=[];
   for(let b of blockOrder) for(let i=0;i<3;i++) newGrid.push(grid[b*3+i]);
-  solution=newGrid.flat();
+  solution=newGrid;
 }
 
 function countOccurrences(arr) {
@@ -436,7 +436,7 @@ function countOccurrences(arr) {
             for (let i = 0; i < GRID_SIZE; i++) {
                 puzzle[i] = [];
                 for (let j = 0; j < GRID_SIZE; j++) {
-                    puzzle[i][j] = solution[i * GRID_SIZE + j];
+                    puzzle[i][j] = solution[i][j];
                 }
             }
 

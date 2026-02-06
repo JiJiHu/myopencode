@@ -90,18 +90,20 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: nowrap;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
 
         .start-btn {
@@ -569,8 +571,26 @@
             <div><span class="label">最高分:</span><span class="value" id="finalHighScore">0</span></div>
             <div><span class="label">达到等级:</span><span class="value" id="finalLevel">1</span></div>
             <div><span class="label">游戏时长:</span><span class="value" id="gameTime">0秒</span></div>
+            <div><span class="label">难度:</span><span class="value" id="finalDifficulty">简单</span></div>
         </div>
-        <button onclick="restartGame()">再玩一次</button>
+        
+        <div id="nameInputSection">
+            <input type="text" id="playerName" placeholder="输入你的名字" maxlength="10"
+                   style="padding: 10px; font-size: 16px; border: 2px solid var(--onepiece-gold); border-radius: 5px; margin: 10px 0; width: 200px;">
+            <br>
+            <button onclick="saveScore()">保存成绩</button>
+            <button onclick="hideNameInput()">跳过</button>
+        </div>
+        
+        <div id="leaderboardSection" style="display: none; margin-top: 10px; text-align: left;">
+            <h3 style="color: var(--onepiece-ocean-deep); margin-bottom: 10px; text-align: center;">🏆 排行榜</h3>
+            <div id="leaderboardList" style="max-height: 200px; overflow-y: auto; background: var(--onepiece-cream); padding: 10px; border-radius: 5px; border: 2px solid var(--onepiece-gold);">
+                <!-- 排行榜内容 -->
+            </div>
+        </div>
+        
+        <button onclick="restartGame()" style="margin-top: 10px;">再玩一次</button>
+        <button onclick="goBackHome()" style="margin-top: 5px;">返回主页</button>
     </div>
 
     <script>
@@ -1147,12 +1167,107 @@
             document.getElementById('finalLevel').textContent = level;
             document.getElementById('gameTime').textContent = gameTime + '秒';
             
+            const diffText = {
+                'easy': '简单',
+                'medium': '中等',
+                'hard': '困难'
+            }[currentDifficulty];
+            document.getElementById('finalDifficulty').textContent = diffText;
+            
             document.getElementById('gameOverOverlay').style.display = 'block';
             document.getElementById('gameOver').style.display = 'block';
             document.getElementById('startBtn').disabled = false;
             document.getElementById('pauseBtn').disabled = true;
             document.getElementById('restartBtn').disabled = false;
             document.getElementById('startBtn').textContent = '开始游戏';
+            
+            // 显示名字输入框
+            document.getElementById('nameInputSection').style.display = 'block';
+            document.getElementById('leaderboardSection').style.display = 'none';
+            document.getElementById('playerName').value = '';
+            document.getElementById('playerName').focus();
+        }
+
+        // 返回主页
+        function goBackHome() {
+            window.location.href = '../../index.html';
+        }
+
+        // 保存成绩
+        function saveScore() {
+            const playerName = document.getElementById('playerName').value.trim() || '匿名';
+            const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
+            
+            const scoreData = {
+                name: playerName,
+                score: score,
+                level: level,
+                difficulty: currentDifficulty,
+                time: gameTime,
+                date: new Date().toLocaleString('zh-CN')
+            };
+
+            let leaderboard = JSON.parse(localStorage.getItem('snakeLeaderboard') || '[]');
+            leaderboard.push(scoreData);
+            
+            // 按分数从高到低排序
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // 只保留前10名
+            leaderboard = leaderboard.slice(0, 10);
+            
+            localStorage.setItem('snakeLeaderboard', JSON.stringify(leaderboard));
+            
+            hideNameInput();
+            displayLeaderboard();
+        }
+
+        // 隐藏名字输入
+        function hideNameInput() {
+            document.getElementById('nameInputSection').style.display = 'none';
+            displayLeaderboard();
+        }
+
+        // 显示排行榜
+        function displayLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('snakeLeaderboard') || '[]');
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = '<p style="text-align: center; color: #666;">暂无记录，快来创造第一个记录吧！</p>';
+            } else {
+                let html = '';
+                leaderboard.forEach((data, index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = index < 3 ? medals[index] : `${index + 1}.`;
+                    
+                    const diffText = {
+                        'easy': '简单',
+                        'medium': '中等',
+                        'hard': '困难'
+                    }[data.difficulty];
+                    
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #ddd;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 18px;">${medal}</span>
+                                <div>
+                                    <div style="font-weight: bold; color: var(--onepiece-black);">${data.name}</div>
+                                    <div style="font-size: 12px; color: var(--onepiece-wood-dark);">${diffText} · Lv.${data.level}</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: bold; color: var(--onepiece-ocean-deep);">🏆 ${data.score}</div>
+                                <div style="font-size: 12px; color: #666;">${data.time}秒</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                leaderboardList.innerHTML = html;
+            }
+            
+            document.getElementById('leaderboardSection').style.display = 'block';
         }
 
         // 初始化游戏

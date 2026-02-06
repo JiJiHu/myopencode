@@ -1,0 +1,41 @@
+/* 横屏/竖屏自适应补充样式 */
+@media (max-width: 900px) {
+  .game-container {
+    flex-direction: column !important;
+    padding: 15px;
+  }
+  
+  .sudoku-container,
+  .gomoku-container,
+  .snake-container {
+    flex-direction: column !important;
+    align-items: center;
+  }
+  
+  canvas,
+  .sudoku-grid {
+    max-width: min(90vw, 450px);
+    max-height: min(90vw, 450px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .game-container {
+    flex-direction: row !important;
+  }
+}
+
+@media (orientation: portrait) {
+  .game-container {
+    flex-direction: column !important;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    font-size: 12px;
+  }
+}

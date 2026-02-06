@@ -190,6 +190,7 @@
     <div class="game-over" id="gameOver">
         <h2 id="winnerText">游戏结束！</h2>
         <button onclick="resetGame()">再来一局</button>
+        <button onclick="goBackHome()">返回主页</button>
     </div>
 
     <script>
@@ -597,6 +598,11 @@
     }
   });
   
-  canvas.addEventListener('mouseleave', drawBoard)    </script>
+  canvas.addEventListener('mouseleave', drawBoard);
+
+  // 返回主页
+  function goBackHome() {
+    window.location.href = '../../index.html';
+  }
 </body>
 </html>

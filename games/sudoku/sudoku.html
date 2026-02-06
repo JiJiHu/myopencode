@@ -341,7 +341,7 @@
         let grid = [];
         let solution = [];
         let selectedCell = null;
-  moveHistory = [];
+        let moveHistory = [];
         let errors = 0;
         let timer = 0;
         let timerInterval = null;
@@ -349,8 +349,6 @@
         let difficulty = 'easy';
 
         const sudokuGrid = document.getElementById('sudokuGrid');
-
-        let moveHistory = [];
 
 function initGrid() {
             sudokuGrid.innerHTML = '';
@@ -379,7 +377,7 @@ function initGrid() {
     [2,8,7,4,1,9,6,3,5],
     [3,4,5,2,8,6,1,7,9]
   ];
-  let grid = baseSolution.map(row => [...row]);
+  let grid = base.map(row => [...row]);
   const rand = (n) => Math.floor(Math.random() * n);
   const mapping = {}; const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
   for(let i=0;i<9;i++) mapping[i+1]=nums[i];

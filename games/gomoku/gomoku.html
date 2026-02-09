@@ -179,11 +179,20 @@
             </select>
         </div>
 
-        <div class="mode-selector" id="difficultySelector" style="display:none;margin-top:10px;"> <label>AI难度:</label> <select id="aiDifficulty" onchange="changeDifficulty()"> <option value="easy">简单</option> <option value="medium" selected>中等</option> <option value="hard">困难</option> </select> </div> <canvas id="gameCanvas" width="500" height="500"></canvas>
+        <div class="mode-selector" id="difficultySelector" style="display:none;margin-top:10px;">
+            <label>AI难度:</label>
+            <select id="aiDifficulty" onchange="changeDifficulty()">
+                <option value="easy">简单</option>
+                <option value="medium" selected>中等</option>
+                <option value="hard">困难</option>
+            </select>
+        </div>
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
 
         <div class="controls">
             <p>点击棋盘落子</p>
             <button class="restart-btn" onclick="resetGame()">重新开始</button>
+            <button class="restart-btn" onclick="goBackHome()">返回主页</button>
         </div>
     </div>
 
@@ -575,9 +584,9 @@
 
         // 初始化游戏
         initBoard();
-        drawBoard();;
-  
-  // 鼠标悬停预览功能
+        drawBoard();
+
+        // 鼠标悬停预览功能
   canvas.addEventListener('mousemove', (e) => {
     if (gameOver) return;
     const rect = canvas.getBoundingClientRect();

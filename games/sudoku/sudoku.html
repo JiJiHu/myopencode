@@ -272,6 +272,7 @@
             <button class="restart-btn" onclick="restartGame()">重新开始</button>
             <button class="hint-btn" onclick="showHint()">提示</button>
             <button class="check-btn" onclick="checkSolution()">检查</button>
+            <button class="restart-btn" onclick="goBackHome()">返回主页</button>
         </div>
 
         <div class="controls">
@@ -779,7 +780,7 @@ function checkSolution() {
             const score = {
                 name: playerName,
                 time: timer,
-                errors: errors_count,
+                errors: errors,
                 difficulty: difficulty,
                 date: new Date().toLocaleString('zh-CN')
             };
@@ -845,9 +846,9 @@ function checkSolution() {
                 
                 leaderboardList.innerHTML = html;
             }
-            
+
             document.getElementById('leaderboardSection').style.display = 'block';
-            document.getElementById('finalErrors').textContent = errors_count;
+            document.getElementById('finalErrors').textContent = errors;
             
             const diffText = {
                 'easy': '简单',

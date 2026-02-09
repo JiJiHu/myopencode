@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🏴‍☠️ 超级贪吃蛇</title>
     <link rel="stylesheet" href="../../onepiece-theme.css">
     <link rel="stylesheet" href="../responsive-fix.css">
@@ -22,6 +22,32 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+        }
+
+        .close-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: rotate(90deg);
         }
 
         .game-container {
@@ -461,6 +487,8 @@
     </style>
 </head>
 <body>
+    <button class="close-btn" onclick="goBackHome()" title="返回主页">×</button>
+
     <div class="game-container game-container-bottom-nails">
         <div class="header">
             <h1>🏴‍☠️ 超级贪吃蛇</h1>
@@ -491,7 +519,6 @@
             <button class="btn pause-btn" id="pauseBtn" onclick="togglePause()" disabled>暂停</button>
             <button class="btn restart-btn" id="restartBtn" onclick="restartGame()" disabled>重新开始</button>
             <button class="btn settings-btn" id="settingsBtn" onclick="toggleSettings()">设置</button>
-            <button class="btn" onclick="goBackHome()">返回主页</button>
         </div>
 
         <div class="difficulty-selector">

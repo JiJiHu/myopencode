@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🏴‍☠️ 五子棋对决</title>
     <link rel="stylesheet" href="../../onepiece-theme.css">
     <link rel="stylesheet" href="../responsive-fix.css">
@@ -22,6 +22,32 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+        }
+
+        .close-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: rotate(90deg);
         }
 
         .game-container {
@@ -66,6 +92,8 @@
             box-shadow:
                 0 4px 8px rgba(0,0,0,0.2),
                 inset 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 90vw;
+            max-height: 70vh;
         }
 
         .controls {
@@ -102,6 +130,7 @@
             cursor: pointer;
             font-size: 16px;
             margin-top: 15px;
+            margin-right: 10px;
             transition: background 0.3s;
         }
 
@@ -152,9 +181,30 @@
             border: 2px solid #667eea;
             font-size: 14px;
         }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+
+            canvas {
+                width: 320px;
+                height: 320px;
+            }
+
+            .close-btn {
+                top: 10px;
+                right: 10px;
+                width: 35px;
+                height: 35px;
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <button class="close-btn" onclick="goBackHome()" title="返回主页">×</button>
+
     <div class="game-container game-container-bottom-nails">
         <h1>🏴‍☠️ 五子棋对决</h1>
 
@@ -187,12 +237,12 @@
                 <option value="hard">困难</option>
             </select>
         </div>
+
         <canvas id="gameCanvas" width="500" height="500"></canvas>
 
         <div class="controls">
             <p>点击棋盘落子</p>
             <button class="restart-btn" onclick="resetGame()">重新开始</button>
-            <button class="restart-btn" onclick="goBackHome()">返回主页</button>
         </div>
     </div>
 
@@ -394,15 +444,12 @@
 
             aiThinking = true;
 
-            // AI思考延迟（500-1000ms模拟思考）
             const thinkDelay = 500 + Math.random() * 500;
 
             setTimeout(() => {
-                // 简单AI：寻找最佳位置
                 let bestScore = -Infinity;
                 let bestMove = null;
 
-                // 获取所有空位
                 const emptySpots = [];
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
@@ -412,7 +459,6 @@
                     }
                 }
 
-                // 评估每个空位
                 for (let spot of emptySpots) {
                     const score = evaluateSpot(spot.x, spot.y);
                     if (score > bestScore) {
@@ -430,7 +476,6 @@
         }
 
         function evaluateSpot(x, y) {
-            // 评估这个位置对玩家1和玩家2的分数
             let score1 = 0;
             let score2 = 0;
 
@@ -442,7 +487,6 @@
             ];
 
             for (let [dir1, dir2] of directions) {
-                // 评估玩家1的威胁
                 let count1 = 0;
                 let blocked1 = 0;
 
@@ -489,7 +533,6 @@
                 else if (count1 === 2 && blocked1 === 0) score1 += 100;
                 else if (count1 === 1 && blocked1 === 0) score1 += 10;
 
-                // 评估玩家2的威胁
                 let count2 = 0;
                 let blocked2 = 0;
 
@@ -537,8 +580,10 @@
                 else if (count2 === 1 && blocked2 === 0) score2 += 10;
             }
 
-            // AI倾向于阻止玩家1并创造自己的机会
-            const conf = aiConfig[aiDifficulty]; let finalScore = score2 * conf.attack + score1 * conf.defense; if (conf.random > 0 && Math.random() < conf.random) finalScore += (Math.random() - 0.5) * 200; return finalScore;
+            const conf = aiConfig[aiDifficulty];
+            let finalScore = score2 * conf.attack + score1 * conf.defense;
+            if (conf.random > 0 && Math.random() < conf.random) finalScore += (Math.random() - 0.5) * 200;
+            return finalScore;
         }
 
         function showGameOver(winner) {
@@ -547,13 +592,17 @@
             document.getElementById('gameOver').style.display = 'block';
         }
 
-        function changeDifficulty() { aiDifficulty = document.getElementById('aiDifficulty').value; }
+        function changeDifficulty() {
+            aiDifficulty = document.getElementById('aiDifficulty').value;
+        }
 
- function resetGame() {
+        function resetGame() {
             gameOver = false;
             currentPlayer = 1;
             aiThinking = false;
-            isPVE = gameMode === 'pve'; const ds = document.getElementById('difficultySelector'); if(ds) ds.style.display = isPVE ? 'block' : 'none';
+            isPVE = gameMode === 'pve';
+            const ds = document.getElementById('difficultySelector');
+            if(ds) ds.style.display = isPVE ? 'block' : 'none';
             initBoard();
             drawBoard();
             updatePlayerInfo();
@@ -576,43 +625,48 @@
 
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) / cellSize);
-            const y = Math.floor((e.clientY - rect.top) / cellSize);
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = Math.floor((e.clientX - rect.left) * scaleX / cellSize);
+            const y = Math.floor((e.clientY - rect.top) * scaleY / cellSize);
 
             makeMove(x, y);
         });
 
+        // 鼠标悬停预览功能
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = Math.floor((e.clientX - rect.left) * scaleX / cellSize);
+            const y = Math.floor((e.clientY - rect.top) * scaleY / cellSize);
+            if (x >= 0 && x < boardSize && y >= 0 && y < boardSize && board[x][y] === 0) {
+                drawBoard();
+                const centerX = x * cellSize + cellSize / 2;
+                const centerY = y * cellSize + cellSize / 2;
+                const radius = cellSize / 2 - 4;
+                const ctx = canvas.getContext('2d');
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = currentPlayer === 1 ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.7)';
+                ctx.fill();
+                ctx.strokeStyle = currentPlayer === 1 ? '#333' : '#999';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('mouseleave', drawBoard);
+
+        // 返回主页
+        function goBackHome() {
+            window.location.href = '../../index.html';
+        }
+
         // 初始化游戏
         initBoard();
         drawBoard();
-
-        // 鼠标悬停预览功能
-  canvas.addEventListener('mousemove', (e) => {
-    if (gameOver) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / cellSize);
-    const y = Math.floor((e.clientY - rect.top) / cellSize);
-    if (x >= 0 && x < boardSize && y >= 0 && y < boardSize && board[x][y] === 0) {
-      drawBoard();
-      const centerX = x * cellSize + cellSize / 2;
-      const centerY = y * cellSize + cellSize / 2;
-      const radius = cellSize / 2 - 4;
-      const ctx = canvas.getContext('2d');
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = currentPlayer === 1 ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.7)';
-      ctx.fill();
-      ctx.strokeStyle = currentPlayer === 1 ? '#333' : '#999';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  });
-  
-  canvas.addEventListener('mouseleave', drawBoard);
-
-  // 返回主页
-  function goBackHome() {
-    window.location.href = '../../index.html';
-  }
+    </script>
 </body>
 </html>

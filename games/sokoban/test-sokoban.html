@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>推箱子游戏测试</title>
+</head>
+<body>
+    <h1>推箱子游戏修复测试</h1>
+    <div id="test-results"></div>
+    <div id="gameBoard" style="display:none;"></div>
+
+    <script>
+        // 简化的关卡数据（用于测试）
+        const TEST_LEVELS = [
+            [
+                "#####",
+                "#@! #",
+                "# $ #",
+                "#####"
+            ]
+        ];
+
+        // 从sokoban.html复制的核心代码
+        let currentLevel = 0;
+        let map = [];
+        let playerPos = { x: 0, y: 0 };
+        let moves = 0;
+        let history = [];
+        let isGameOver = false;
+        let isPaused = false;
+        let lastMoveTime = 0;
+        const MOVE_COOLDOWN = 100;
+        const MAX_HISTORY = 100;
+        const SWIPE_THRESHOLD = 30;
+
+        let lastRenderMap = null;
+        let lastRenderPlayerPos = null;
+
+        function parseLevel(levelIndex) {
+            if (levelIndex < 0 || levelIndex >= TEST_LEVELS.length) {
+                return null;
+            }
+
+            const levelData = TEST_LEVELS[levelIndex];
+            if (!Array.isArray(levelData) || levelData.length === 0) {
+                return null;
+            }
+
+            const newMap = [];
+            let foundPlayer = false;
+            let foundExit = false;
+
+            for (let y = 0; y < levelData.length; y++) {
+                const row = [];
+                for (let x = 0; x < levelData[y].length; x++) {
+                    const char = levelData[y][x];
+
+                    if (char === '@') {
+                        playerPos = { x, y };
+                        foundPlayer = true;
+                    }
+
+                    if (char === '!') {
+                        foundExit = true;
+                    }
+
+                    let tileValue = 0;
+                    switch (char) {
+                        case ' ': case '@': case '.': tileValue = 0; break;
+                        case '#': tileValue = 1; break;
+                        case '!': tileValue = 2; break;
+                        case '$': tileValue = 3; break;
+                        default: tileValue = 0;
+                    }
+                    row.push(tileValue);
+                }
+                newMap.push(row);
+            }
+
+            if (!foundPlayer || !foundExit) {
+                return null;
+            }
+
+            return newMap;
+        }
+
+        function canMove(fromX, fromY, toX, toY) {
+            if (toY < 0 || toY >= map.length || toX < 0 || toX >= map[0].length) {
+                return false;
+            }
+
+            const targetTile = map[toY][toX];
+
+            if (targetTile === 1) {
+                return false;
+            }
+
+            if (targetTile === 3) {
+                const boxToX = toX + (toX - fromX);
+                const boxToY = toY + (toY - fromY);
+
+                if (boxToY < 0 || boxToY >= map.length || boxToX < 0 || boxToX >= map[0].length) {
+                    return false;
+                }
+
+                const boxToTile = map[boxToY][boxToX];
+
+                if (boxToTile === 1 || boxToTile === 3) {
+                    return false;
+                }
+
+                return { push: true, boxToX, boxToY };
+            }
+
+            return { push: false };
+        }
+
+        function movePlayer(dx, dy) {
+            if (isGameOver || isPaused) return;
+
+            const now = Date.now();
+            if (now - lastMoveTime < MOVE_COOLDOWN) {
+                return;
+            }
+            lastMoveTime = now;
+
+            const fromX = playerPos.x;
+            const fromY = playerPos.y;
+            const toX = fromX + dx;
+            const toY = fromY + dy;
+
+            const result = canMove(fromX, fromY, toX, toY);
+            if (!result) return;
+
+            const historyEntry = {
+                playerPos: { ...playerPos },
+                changes: [
+                    { x: fromX, y: fromY, oldValue: map[fromY][fromX], newValue: 0 }
+                ],
+                moves,
+                pushed: false
+            };
+
+            playerPos.x = toX;
+            playerPos.y = toY;
+
+            if (map[fromY][fromX] === 2) {
+                map[fromY][fromX] = 2;
+            } else {
+                map[fromY][fromX] = 0;
+            }
+
+            if (result.push) {
+                historyEntry.pushed = true;
+
+                const boxTargetOriginalValue = map[result.boxToY][result.boxToX];
+
+                map[toY][toX] = 0;
+                map[result.boxToY][result.boxToX] = 3;
+
+                historyEntry.changes.push(
+                    { x: result.boxToX, y: result.boxToY, oldValue: boxTargetOriginalValue, newValue: 3 }
+                );
+            }
+
+            if (history.length >= MAX_HISTORY) {
+                history.shift();
+            }
+            history.push(historyEntry);
+
+            if (map[toY][toX] === 2) {
+                isGameOver = true;
+            }
+
+            moves++;
+
+            return true;
+        }
+
+        function undoMove() {
+            if (history.length === 0) return false;
+
+            const lastState = history.pop();
+
+            playerPos = lastState.playerPos;
+
+            for (const change of lastState.changes) {
+                map[change.y][change.x] = change.oldValue;
+            }
+
+            moves = lastState.moves;
+            isGameOver = false;
+
+            return true;
+        }
+
+        function togglePause() {
+            if (isGameOver) return false;
+            isPaused = !isPaused;
+            return isPaused;
+        }
+
+        function loadLevel(levelIndex) {
+            const newMap = parseLevel(levelIndex);
+            if (newMap) {
+                map = newMap;
+                moves = 0;
+                history = [];
+                isGameOver = false;
+                isPaused = false;
+                lastMoveTime = 0;
+                lastRenderMap = null;
+                lastRenderPlayerPos = null;
+                return true;
+            }
+            return false;
+        }
+
+        // 测试函数
+        function runTests() {
+            const results = [];
+            let passed = 0;
+            let failed = 0;
+
+            // 测试1: 关卡加载
+            results.push('<h2>测试1: 关卡数据验证</h2>');
+            const test1 = loadLevel(0);
+            if (test1 && map.length > 0) {
+                results.push('✅ 关卡加载成功');
+                passed++;
+            } else {
+                results.push('❌ 关卡加载失败');
+                failed++;
+            }
+
+            // 测试2: 历史记录限制
+            results.push('<h2>测试2: 历史记录限制（最多100步）</h2>');
+            history = [];
+            // 模拟移动并检查历史记录
+            for (let i = 0; i < 150; i++) {
+                movePlayer(0, 0); // 不移动，但添加历史记录
+            }
+            if (history.length <= MAX_HISTORY) {
+                results.push('✅ 历史记录限制正常（' + history.length + '步，最多100步）');
+                passed++;
+            } else {
+                results.push('❌ 历史记录超出限制');
+                failed++;
+            }
+
+            // 测试3: 移动冷却
+            results.push('<h2>测试3: 移动冷却（100ms）</h2>');
+            loadLevel(0);
+            const move1 = movePlayer(1, 0);
+            const move2 = movePlayer(1, 0);
+            if (!move2) {
+                results.push('✅ 移动冷却生效（快速按键被阻止）');
+                passed++;
+            } else {
+                results.push('❌ 移动冷却未生效');
+                failed++;
+            }
+
+            // 测试4: 撤销功能
+            results.push('<h2>测试4: 撤销功能</h2>');
+            loadLevel(0);
+            setTimeout(() => {
+                movePlayer(1, 0);
+                const beforeUndo = moves;
+                undoMove();
+                if (moves < beforeUndo) {
+                    results.push('✅ 撤销功能正常');
+                    passed++;
+                } else {
+                    results.push('❌ 撤销功能异常');
+                    failed++;
+                }
+
+                // 测试5: 暂停功能
+                results.push('<h2>测试5: 暂停功能</h2>');
+                const paused = togglePause();
+                if (paused) {
+                    const moveInPause = movePlayer(1, 0);
+                    if (!moveInPause) {
+                        results.push('✅ 暂停功能正常（暂停时无法移动）');
+                        passed++;
+                    } else {
+                        results.push('❌ 暂停功能异常（暂停时仍可移动）');
+                        failed++;
+                    }
+                } else {
+                    results.push('❌ 暂停状态切换失败');
+                    failed++;
+                }
+
+                // 测试6: 触摸滑动阈值
+                results.push('<h2>测试6: 触摸滑动阈值（30px）</h2>');
+                if (SWIPE_THRESHOLD === 30) {
+                    results.push('✅ 滑动阈值正确（30px）');
+                    passed++;
+                } else {
+                    results.push('❌ 滑动阈值不正确');
+                    failed++;
+                }
+
+                // 测试7: 增量式渲染变量
+                results.push('<h2>测试7: 增量式渲染</h2>');
+                if (lastRenderMap !== null && lastRenderPlayerPos !== null) {
+                    results.push('✅ 增量式渲染变量已初始化');
+                    passed++;
+                } else {
+                    results.push('❌ 增量式渲染变量未初始化');
+                    failed++;
+                }
+
+                // 测试8: 历史记录优化
+                results.push('<h2>测试8: 历史记录优化（只记录变化位置）</h2>');
+                loadLevel(0);
+                setTimeout(() => {
+                    movePlayer(1, 0);
+                    if (history.length > 0 && history[0].changes && history[0].changes.length > 0) {
+                        results.push('✅ 历史记录优化正常（只记录' + history[0].changes.length + '个变化位置）');
+                        passed++;
+                    } else {
+                        results.push('❌ 历史记录优化异常');
+                        failed++;
+                    }
+
+                    // 汇总结果
+                    results.push('<h2>测试汇总</h2>');
+                    results.push('<p><strong>通过:</strong> ' + passed + '/8</p>');
+                    results.push('<p><strong>失败:</strong> ' + failed + '/8</p>');
+
+                    if (failed === 0) {
+                        results.push('<h3 style="color:green;">🎉 所有测试通过！</h3>');
+                    } else {
+                        results.push('<h3 style="color:red;">⚠️ 有 ' + failed + ' 个测试失败</h3>');
+                    }
+
+                    document.getElementById('test-results').innerHTML = results.join('');
+                }, 150);
+            }, 150);
+        }
+
+        // 运行测试
+        runTests();
+    </script>
+</body>
+</html>

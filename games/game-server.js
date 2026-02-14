@@ -180,8 +180,23 @@ app.get('/api/leaderboard/:game', (req, res) => {
         const gameName = game.toLowerCase();
 
         // 获取分页参数
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+
+        if (page < 1) {
+            return res.status(400).json({
+                success: false,
+                error: '页码必须大于等于 1'
+            });
+        }
+
+        if (limit < 1 || limit > 100) {
+            return res.status(400).json({
+                success: false,
+                error: '每页数量必须在 1-100 之间'
+            });
+        }
+
         const offset = (page - 1) * limit;
 
         // 验证游戏名称
@@ -216,7 +231,7 @@ app.get('/api/leaderboard/:game', (req, res) => {
                 total,
                 totalPages: Math.ceil(total / limit),
                 hasNextPage: offset + limit < total,
-                hasPrevPage: page > 1
+                hasPrevPage: page > 1 && total > 0
             }
         };
 

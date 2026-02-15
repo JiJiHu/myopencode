@@ -2,6 +2,18 @@
   "version": 2,
   "routes": [
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/games/index",
+      "dest": "/games/index.html"
+    },
+    {
+      "src": "/games/index/",
+      "dest": "/games/index.html"
+    },
+    {
       "src": "/games/snake",
       "dest": "/games/snake/snake.html"
     },
@@ -68,11 +80,11 @@
   ],
   "headers": [
     {
-      "source": "/games/(.*)",
+      "source": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600"
+          "value": "public, max-age=86400"
         }
       ]
     },
@@ -81,10 +93,10 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600"
+          "value": "no-cache"
         }
       ]
     }
   ],
-  "cleanUrls": true
+  "cleanUrls": false
 }

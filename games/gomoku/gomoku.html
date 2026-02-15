@@ -233,6 +233,46 @@
                 font-size: 20px;
             }
         }
+
+        /* 撤销按钮样式 */
+        .undo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-undo {
+            padding: 8px 16px;
+            background: var(--onepiece-ocean, #667eea);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-undo:hover:not(:disabled) {
+            background: var(--onepiece-ocean-deep, #4338ca);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-undo:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-undo:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .btn-undo:hover:disabled {
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -251,6 +291,11 @@
                 <span>玩家2:</span>
                 <span class="player-indicator" id="player2Indicator" style="background: white;"></span>
                 <span id="player2Score">白棋</span>
+            </div>
+            <div class="undo-container">
+                <button class="btn-undo" id="btnUndo" title="撤销上一步">
+                    ↩ 撤销
+                </button>
             </div>
         </div>
 
@@ -308,6 +353,7 @@
         let aiThinking = false;
         let moveCount = 0;
         let gameStartTime = null;
+        let moveHistory = [];
 
         const aiConfig = {
             easy: { attack: 0.3, defense: 0.8, random: 0.4 },
@@ -463,6 +509,9 @@
             board[x][y] = currentPlayer;
             drawPiece(x, y, currentPlayer);
             moveCount++;
+
+            moveHistory.push({ x: x, y: y, player: currentPlayer });
+            updateUndoButton();
 
             if (checkWin(x, y, currentPlayer)) {
                 gameOver = true;
@@ -627,6 +676,32 @@
             return finalScore;
         }
 
+        function undoMove() {
+            if (moveHistory.length === 0 || gameOver) {
+                return;
+            }
+
+            const lastMove = moveHistory.pop();
+            board[lastMove.x][lastMove.y] = 0;
+            const cell = document.querySelector(`[data-x='${lastMove.x}'][data-y='${lastMove.y}']`);
+            if (cell) {
+                cell.textContent = '';
+                cell.classList.remove('black', 'white');
+            }
+            currentPlayer = lastMove.player;
+            moveCount--;
+            updatePlayerInfo();
+            updateUndoButton();
+            console.log('撤销了:', lastMove.x, lastMove.y);
+        }
+
+        function updateUndoButton() {
+            const btnUndo = document.getElementById('btnUndo');
+            if (btnUndo) {
+                btnUndo.disabled = moveHistory.length === 0 || gameOver;
+            }
+        }
+
         function showGameOver(winner) {
             const winnerName = winner === 1 ? '黑棋' : '白棋';
             const modeText = gameMode === 'pvp' ? '双人对战' : '人机对战';
@@ -657,11 +732,13 @@
             isPVE = gameMode === 'pve';
             moveCount = 0;
             gameStartTime = Date.now();
+            moveHistory = [];
             const ds = document.getElementById('difficultySelector');
             if(ds) ds.style.display = isPVE ? 'block' : 'none';
             initBoard();
             drawBoard();
             updatePlayerInfo();
+            updateUndoButton();
             document.getElementById('gameOverOverlay').style.display = 'none';
             document.getElementById('gameOver').style.display = 'none';
         }
@@ -724,6 +801,13 @@
         window.addEventListener('DOMContentLoaded', function() {
             initBoard();
             drawBoard();
+            updateUndoButton();
+
+            const btnUndo = document.getElementById('btnUndo');
+            if (btnUndo) {
+                btnUndo.disabled = true;
+                btnUndo.addEventListener('click', undoMove);
+            }
         });
     </script>
 </body>

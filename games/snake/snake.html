@@ -484,6 +484,80 @@
                 transform: translate(var(--dx), var(--dy)) scale(0);
             }
         }
+
+        /* 虚拟方向键样式 - 移动端 */
+        .d-pad-controls {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 180px;
+            z-index: 1000;
+        }
+
+        .d-pad-btn {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--onepiece-ocean-deep, #667eea);
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--onepiece-ocean-deep, #667eea);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .d-pad-btn:active {
+            background: var(--onepiece-ocean-deep, #667eea);
+            color: white;
+            transform: scale(0.95);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .d-pad-up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .d-pad-down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .d-pad-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .d-pad-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 移动端显示虚拟按键 */
+        @media (max-width: 768px) {
+            .d-pad-controls {
+                display: block;
+            }
+
+            .game-canvas-container {
+                margin-bottom: 200px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -512,6 +586,14 @@
         <div class="game-canvas-container">
             <canvas id="gameCanvas" width="500" height="500"></canvas>
             <div class="power-up-indicator" id="powerUpIndicator"></div>
+        </div>
+
+        <!-- 虚拟方向键控制区 - 移动端 -->
+        <div class="d-pad-controls" id="dPadControls">
+            <button class="d-pad-btn d-pad-up" data-direction="up">▲</button>
+            <button class="d-pad-btn d-pad-left" data-direction="left">◀</button>
+            <button class="d-pad-btn d-pad-down" data-direction="down">▼</button>
+            <button class="d-pad-btn d-pad-right" data-direction="right">▶</button>
         </div>
 
         <div class="controls">
@@ -1121,6 +1203,57 @@
                 if (touchDy > 30 && touchDy !== 1) { dx = 0; dy = 1; }
                 else if (touchDy < -30 && touchDy !== -1) { dx = 0; dy = -1; }
             }
+        });
+
+        // 虚拟按键控制
+        const dPadButtons = document.querySelectorAll('.d-pad-btn');
+
+        dPadButtons.forEach(btn => {
+            btn.addEventListener('contextmenu', e => e.preventDefault());
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const direction = btn.dataset.direction;
+
+                switch(direction) {
+                    case 'up':
+                        if (dx !== 0) { dx = 0; dy = -1; }
+                        break;
+                    case 'down':
+                        if (dx !== 0) { dx = 0; dy = 1; }
+                        break;
+                    case 'left':
+                        if (dy !== 0) { dx = -1; dy = 0; }
+                        break;
+                    case 'right':
+                        if (dy !== 0) { dx = 1; dy = 0; }
+                        break;
+                }
+            });
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const direction = btn.dataset.direction;
+
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+
+                switch(direction) {
+                    case 'up':
+                        if (dx !== 0) { dx = 0; dy = -1; }
+                        break;
+                    case 'down':
+                        if (dx !== 0) { dx = 0; dy = 1; }
+                        break;
+                    case 'left':
+                        if (dy !== 0) { dx = -1; dy = 0; }
+                        break;
+                    case 'right':
+                        if (dy !== 0) { dx = 1; dy = 0; }
+                        break;
+                }
+            });
         });
 
         // 排行榜API配置（使用相对路径，自动适配本地/外网访问）

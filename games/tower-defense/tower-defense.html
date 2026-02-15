@@ -651,9 +651,55 @@
                 height: 40px;
                 font-size: 16px;
             }
-            
+
             .back-home-btn {
                 right: 60px;
+            }
+        }
+
+        /* Wave announcement */
+        .wave-announcement {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .wave-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .wave-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .wave-announcement {
+                width: 90%;
+                padding: 20px 30px;
+            }
+
+            .wave-title {
+                font-size: 24px;
+            }
+
+            .wave-info {
+                font-size: 14px;
             }
         }
     </style>
@@ -1155,7 +1201,29 @@
             spawnTimer = 0;
             document.getElementById('nextWaveBtn').classList.remove('show');
         }
-        
+
+        // Show wave announcement
+        function showWaveAnnouncement(waveNum) {
+            const announcement = document.createElement('div');
+            announcement.className = 'wave-announcement';
+            announcement.innerHTML = `
+                <div class="wave-content">
+                    <div class="wave-title">🌊 第 ${waveNum} 波</div>
+                    <div class="wave-info">
+                        <span>⏱️ 3秒后开始</span>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(announcement);
+
+            setTimeout(() => {
+                announcement.style.opacity = '0';
+                setTimeout(() => {
+                    announcement.remove();
+                }, 500);
+            }, 2500);
+        }
+
         // Update game
         function update() {
             if (gameState !== 'playing') return;
@@ -1175,12 +1243,21 @@
             // Check wave end
             if (waveInProgress && enemiesToSpawn.length === 0 && enemies.length === 0) {
                 waveInProgress = false;
-                wave++;
-                updateUI();
-                document.getElementById('nextWaveBtn').classList.add('show');
-                
+
                 // Bonus gold for completing wave
                 gold += 50 + wave * 10;
+
+                // Auto start next wave after 3 seconds
+                setTimeout(() => {
+                    if (gameState === 'playing') {
+                        wave++;
+                        updateUI();
+                        startWave();
+                    }
+                }, 3000);
+
+                // Show wave announcement
+                showWaveAnnouncement(wave + 1);
                 updateUI();
             }
             
@@ -1969,7 +2046,14 @@
         }
         
         function goBackHome() {
-            window.location.href = '../index.html';
+            if (gameState === 'playing') {
+                const confirmMsg = '确定要退出游戏吗？当前进度将丢失。';
+                if (confirm(confirmMsg)) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
         }
         
         // Additional event listeners

@@ -1159,7 +1159,14 @@
         }
 
         function goBackHome() {
-            window.location.href = '../index.html';
+            if (gameActive && !gameOver) {
+                const confirmMsg = '确定要退出游戏吗？当前进度将丢失。';
+                if (confirm(confirmMsg)) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
         }
 
         // Override game over functions

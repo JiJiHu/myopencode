@@ -491,6 +491,86 @@
             font-size: 12px;
             color: #aaa;
         }
+
+        /* 移动端控制区样式 */
+        .mobile-controls {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-mode-indicator {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .mode-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .mode-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-control {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ffd700;
+            background: white;
+            color: #ffd700;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-control.active {
+            background: #ffd700;
+            color: #1e3c72;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-control:not(.active):hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .btn-control:active {
+            transform: scale(0.97);
+        }
+
+        .control-hint {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 移动端显示 */
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: block;
+            }
+
+            .game-board {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -534,6 +614,25 @@
         <div class="game-actions">
             <button class="action-btn" onclick="restartGame()">🔄 重新开始</button>
             <button class="action-btn" onclick="showLeaderboard()">🏆 查看排行榜</button>
+        </div>
+
+        <!-- 移动端操作控制区 -->
+        <div class="mobile-controls" id="mobileControls">
+            <div class="control-mode-indicator">
+                <div class="mode-label">当前模式</div>
+                <div class="mode-value" id="modeValue">🕵️ 揭开模式</div>
+            </div>
+            <div class="control-buttons">
+                <button class="btn-control btn-reveal active" id="btnReveal">
+                    🕵️ 揭开
+                </button>
+                <button class="btn-control btn-flag" id="btnFlag">
+                    🚩 标记
+                </button>
+            </div>
+            <div class="control-hint">
+                💡 长按格子可直接标记
+            </div>
         </div>
 
         <div class="instructions">
@@ -596,6 +695,8 @@
         let longPressTriggered = false;
         let touchStartX = 0;
         let touchStartY = 0;
+        let currentMode = 'reveal';
+        const LONG_PRESS_DURATION = 500;
 
         // 初始化游戏
         function initGame() {
@@ -724,6 +825,9 @@
             boardEl.addEventListener('touchend', handleBoardTouchEnd, { passive: false });
             boardEl.addEventListener('touchmove', handleBoardTouchMove, { passive: true });
             boardEl.addEventListener('touchcancel', handleBoardTouchCancel);
+
+            // 初始化移动端控制
+            initMobileControls();
         }
 
         // 处理板级点击（事件委托）
@@ -748,6 +852,37 @@
             const col = parseInt(cell.dataset.col);
 
             handleRightClick(row, col);
+        }
+
+        // 初始化移动端控制
+        function initMobileControls() {
+            const btnReveal = document.getElementById('btnReveal');
+            const btnFlag = document.getElementById('btnFlag');
+            const modeValue = document.getElementById('modeValue');
+
+            if (!btnReveal || !btnFlag || !modeValue) return;
+
+            function setMode(mode) {
+                currentMode = mode;
+                if (mode === 'reveal') {
+                    btnReveal.classList.add('active');
+                    btnFlag.classList.remove('active');
+                    modeValue.textContent = '🕵️ 揭开模式';
+                } else {
+                    btnReveal.classList.remove('active');
+                    btnFlag.classList.add('active');
+                    modeValue.textContent = '🚩 标记模式';
+                }
+
+                if (navigator.vibrate) {
+                    navigator.vibrate(20);
+                }
+            }
+
+            btnReveal.addEventListener('click', () => setMode('reveal'));
+            btnFlag.addEventListener('click', () => setMode('flag'));
+
+            setMode('reveal');
         }
 
         // 处理板级触摸开始（事件委托）
@@ -811,7 +946,12 @@
                     const row = parseInt(cell.dataset.row);
                     const col = parseInt(cell.dataset.col);
 
-                    handleClick(row, col);
+                    // 根据当前模式执行不同操作
+                    if (currentMode === 'flag') {
+                        handleRightClick(row, col);
+                    } else {
+                        handleClick(row, col);
+                    }
                 }
             }
         }

@@ -297,6 +297,24 @@ body {
     animation: badgePulse 2s ease-in-out infinite;
 }
 
+/* 新游戏标签 */
+.game-card .new-badge {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: linear-gradient(145deg, #4CAF50, #2E7D32);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.3),
+        0 0 0 2px var(--onepiece-black);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
 @keyframes badgePulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }

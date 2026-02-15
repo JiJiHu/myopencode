@@ -765,14 +765,27 @@ function loadPuzzle() {
             );
 
             if (!cell || cell.classList.contains('fixed')) return;
-  const oldValue = grid[row][col];
-  moveHistory.push({row, col, oldValue, newValue: num});
+            const oldValue = grid[row][col];
 
             if (num === 0) {
                 // 清除
                 grid[row][col] = 0;
                 cell.textContent = '';
                 cell.classList.remove('error');
+                moveHistory.push({row, col, oldValue, newValue: num});
+                return;
+            }
+
+            // 首先检查是否违反数独规则（行、列、宫格重复）
+            const checkResult = checkCell(row, col, num);
+            if (!checkResult.valid) {
+                // 违反数独规则
+                errors++;
+                document.getElementById('errors').textContent = errors;
+                cell.classList.add('error');
+                grid[row][col] = num;
+                cell.textContent = num;
+                moveHistory.push({row, col, oldValue, newValue: num});
                 return;
             }
 
@@ -781,16 +794,20 @@ function loadPuzzle() {
                 grid[row][col] = num;
                 cell.textContent = num;
                 cell.classList.remove('error');
+                moveHistory.push({row, col, oldValue, newValue: num});
 
                 // 检查是否完成
                 if (checkWin()) {
                     gameOver();
                 }
             } else {
-                // 错误
+                // 答案错误
                 errors++;
                 document.getElementById('errors').textContent = errors;
                 cell.classList.add('error');
+                grid[row][col] = num;
+                cell.textContent = num;
+                moveHistory.push({row, col, oldValue, newValue: num});
             }
         }
 
@@ -831,7 +848,37 @@ function loadPuzzle() {
   selectCell(row, col);
 }
 
-function checkSolution() {
+        // 检查指定格子填入的数字是否违反数独规则
+        function checkCell(row, col, num) {
+            // 检查行
+            for (let j = 0; j < GRID_SIZE; j++) {
+                if (j !== col && grid[row][j] === num) {
+                    return { valid: false, message: `第 ${row + 1} 行已有数字 ${num}` };
+                }
+            }
+
+            // 检查列
+            for (let i = 0; i < GRID_SIZE; i++) {
+                if (i !== row && grid[i][col] === num) {
+                    return { valid: false, message: `第 ${col + 1} 列已有数字 ${num}` };
+                }
+            }
+
+            // 检查3x3宫格
+            const boxRow = Math.floor(row / BOX_SIZE) * BOX_SIZE;
+            const boxCol = Math.floor(col / BOX_SIZE) * BOX_SIZE;
+            for (let i = boxRow; i < boxRow + BOX_SIZE; i++) {
+                for (let j = boxCol; j < boxCol + BOX_SIZE; j++) {
+                    if ((i !== row || j !== col) && grid[i][j] === num) {
+                        return { valid: false, message: `所在宫格已有数字 ${num}` };
+                    }
+                }
+            }
+
+            return { valid: true };
+        }
+
+        function checkSolution() {
             if (isGameOver) return;
 
             const cells = sudokuGrid.querySelectorAll('.sudoku-cell');
@@ -840,10 +887,22 @@ function checkSolution() {
             cells.forEach(cell => {
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
+                const value = grid[row][col];
 
-                if (grid[row][col] !== 0 && grid[row][col] !== solution[row][col]) {
-                    cell.classList.add('error');
-                    hasErrors = true;
+                // 清除之前的错误标记
+                cell.classList.remove('error');
+
+                if (value !== 0) {
+                    // 检查是否违反数独规则（行、列、宫格重复）
+                    const checkResult = checkCell(row, col, value);
+                    if (!checkResult.valid) {
+                        cell.classList.add('error');
+                        hasErrors = true;
+                    } else if (value !== solution[row][col]) {
+                        // 不违反规则但与答案不符
+                        cell.classList.add('error');
+                        hasErrors = true;
+                    }
                 }
             });
 

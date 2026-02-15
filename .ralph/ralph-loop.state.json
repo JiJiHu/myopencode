@@ -1,0 +1,13 @@
+{
+  "active": true,
+  "iteration": 1,
+  "minIterations": 1,
+  "maxIterations": 3,
+  "completionPromise": "COMPLETE",
+  "tasksMode": false,
+  "taskPromise": "READY_FOR_NEXT_TASK",
+  "prompt": "分析这个游戏项目是否有bug，特别关注：\n1. XSS安全问题 - 检查sudoku/sudoku.html, snake/snake.html, minesweeper/minesweeper.html中的用户输入是否转义\n2. Sokoban游戏 - 目录是否存在\n3. 路径一致性 - 各游戏返回主页的路径是否统一\n4. 其他代码质量问题\n\n如果发现bug，请修复它们。",
+  "startedAt": "2026-02-14T09:59:15.749Z",
+  "model": "",
+  "agent": "claude-code"
+}

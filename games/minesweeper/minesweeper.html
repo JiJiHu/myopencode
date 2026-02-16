@@ -1184,11 +1184,29 @@
                     alert('分数已上传到排行榜！');
                 } else {
                     console.error('上传分数失败:', response.status);
-                    alert('上传分数失败，请稍后重试');
+                    // Fallback到localStorage
+                    saveToLocal({ playerName: trimmedName, score: timer, timestamp: Date.now(), metadata: { difficulty: currentDifficulty, rows: rows, cols: cols, mines: totalMines } });
+                    alert('分数已保存到本地记录！');
                 }
             } catch (error) {
                 console.error('上传分数失败:', error);
-                alert('网络错误，上传分数失败');
+                // Fallback到localStorage
+                saveToLocal({ playerName: trimmedName, score: timer, timestamp: Date.now(), metadata: { difficulty: currentDifficulty, rows: rows, cols: cols, mines: totalMines } });
+                alert('网络错误，分数已保存到本地记录');
+            }
+        }
+
+        // 保存到localStorage
+        function saveToLocal(entry) {
+            try {
+                const key = 'minesweeperLeaderboard';
+                let data = JSON.parse(localStorage.getItem(key) || '[]');
+                data.push(entry);
+                data.sort((a, b) => a.score - b.score); // 排序：时间越短越好
+                data = data.slice(0, 100); // 只保留前100条
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error('保存到localStorage失败:', e);
             }
         }
 
@@ -1241,11 +1259,24 @@
                     const data = result.success ? result.leaderboard : result;
                     displayLeaderboard(data);
                 } else {
-                    content.innerHTML = '<p>加载失败，请稍后重试</p>';
+                    console.warn('API加载失败，尝试本地数据');
+                    loadLocalLeaderboard();
                 }
             } catch (error) {
                 console.error('加载排行榜失败:', error);
-                content.innerHTML = '<p>加载失败，请稍后重试</p>';
+                loadLocalLeaderboard();
+            }
+        }
+
+        // 从localStorage加载排行榜
+        function loadLocalLeaderboard() {
+            try {
+                const key = 'minesweeperLeaderboard';
+                const data = JSON.parse(localStorage.getItem(key) || '[]');
+                displayLeaderboard(data);
+            } catch (e) {
+                console.error('加载本地排行榜失败:', e);
+                content.innerHTML = '<p>暂无排行榜数据</p>';
             }
         }
 

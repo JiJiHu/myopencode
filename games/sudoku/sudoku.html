@@ -471,7 +471,18 @@
                 }
             } catch (error) {
                 console.error('获取排行榜失败:', error);
-                // 如果API失败，使用缓存数据
+                // 如果API失败，先尝试从localStorage读取
+                try {
+                    const localData = JSON.parse(localStorage.getItem('sudokuLeaderboard') || '[]');
+                    if (localData.length > 0) {
+                        console.log('使用本地排行榜数据');
+                        leaderboardData = localData;
+                        return localData;
+                    }
+                } catch (localError) {
+                    console.error('读取本地数据失败:', localError);
+                }
+                // 最后使用缓存数据
                 if (leaderboardCache) {
                     console.log('使用缓存数据');
                     leaderboardData = leaderboardCache;
@@ -510,7 +521,21 @@
                 }
             } catch (error) {
                 console.error('保存分数失败:', error);
-                return false;
+                // API失败时尝试保存到本地存储
+                try {
+                    const localScores = JSON.parse(localStorage.getItem('sudokuLeaderboard') || '[]');
+                    localScores.push({...scoreData, date: new Date().toISOString(), id: Date.now()});
+                    localScores.sort((a, b) => a.time - b.time);
+                    localStorage.setItem('sudokuLeaderboard', JSON.stringify(localScores.slice(0, 100)));
+                    console.log('已保存到本地存储');
+                    // 更新本地排行榜数据
+                    leaderboardData = localScores;
+                    leaderboardCache = leaderboardData;
+                    return true;
+                } catch (localError) {
+                    console.error('保存到localStorage失败:', localError);
+                    return false;
+                }
             }
         }
 

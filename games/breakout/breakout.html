@@ -436,6 +436,14 @@
             z-index: 55;
         }
 
+        .controls-hidden {
+            display: none !important;
+        }
+
+        .controls-visible {
+            display: block !important;
+        }
+
         #gameControls > * {
             pointer-events: auto;
         }
@@ -497,7 +505,7 @@
         
         <div class="pause-indicator" id="pauseIndicator">暂停</div>
 
-        <div id="gameControls" style="display: none;">
+        <div id="gameControls" class="controls-hidden">
             <button class="back-home-btn" id="backHomeBtn" title="返回主页">×</button>
             <button class="game-pause-btn" id="gamePauseBtn" title="暂停游戏">⏸</button>
         </div>
@@ -1161,7 +1169,8 @@
 
         function backToMenu() {
             hidePauseMenu();
-            document.getElementById('gameControls').style.display = 'none';
+            document.getElementById('gameControls').classList.remove('controls-visible');
+            document.getElementById('gameControls').classList.add('controls-hidden');
             document.getElementById('gameUI').style.display = 'none';
             document.getElementById('mainMenu').classList.remove('hidden');
             gameState = 'menu';
@@ -1191,7 +1200,8 @@
             document.getElementById('gameOverTitle').classList.remove('victory-title');
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOverMenu').classList.remove('hidden');
-            document.getElementById('gameControls').style.display = 'none';
+            document.getElementById('gameControls').classList.remove('controls-visible');
+            document.getElementById('gameControls').classList.add('controls-hidden');
         };
 
         gameWin = function() {
@@ -1214,7 +1224,8 @@
             document.getElementById('gameOverMenu').classList.add('hidden');
             document.getElementById('gameUI').style.display = 'flex';
             document.getElementById('pauseIndicator').style.display = 'none';
-            document.getElementById('gameControls').style.display = 'block';
+            document.getElementById('gameControls').classList.remove('controls-hidden');
+            document.getElementById('gameControls').classList.add('controls-visible');
 
             resizeCanvas();
             initPaddle();

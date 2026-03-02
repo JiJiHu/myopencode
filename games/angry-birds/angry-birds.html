@@ -936,6 +936,17 @@
             alert('🎮 游戏说明：\n\n1. 拖拽小鸟向后拉动弹弓\n2. 松开发射小鸟\n3. 消灭所有小猪过关\n4. 使用越少小鸟，得分越高\n5. 点击飞行中的小鸟可激活特殊能力\n\n🐦 小鸟能力：\n• 红色：普通小鸟\n• 黄色：点击加速冲刺\n• 蓝色：点击分裂成三只\n• 白色：点击下蛋炸弹\n• 黑色：点击爆炸');
         }
 
+        // 提示显示/隐藏
+        function showHint(text) {
+            const hint = document.getElementById('hintText');
+            hint.textContent = text;
+            hint.style.display = 'block';
+        }
+
+        function hideHint() {
+            document.getElementById('hintText').style.display = 'none';
+        }
+
         // ==================== 关卡系统 ====================
         function renderLevelGrid() {
             const grid = document.getElementById('levelGrid');
@@ -1078,13 +1089,14 @@
             const birdType = birdsQueue.shift();
             const birdData = BIRD_TYPES[birdType];
 
-            // 创建小鸟
+            // 创建小鸟（临时 static，等玩家拖动时再释放）
             currentBird = Bodies.circle(
                 CONFIG.slingshotX,
                 CONFIG.slingshotY,
                 birdData.radius,
                 {
                     label: 'bird',
+                    isStatic: true, // 固定小鸟直到被拖动
                     render: {
                         fillStyle: birdData.color,
                         strokeStyle: birdData.borderColor || '#000000',
@@ -1105,22 +1117,15 @@
             currentBird.birdData = birdData;
             currentBird.originalRadius = birdData.radius;
             currentBird.canActivate = true;
-            // 标记为可拖动（在弹弓上）
             currentBird.isDraggable = true;
-            currentBird.isStatic = false;
+            // 保存弹弓位置作为拖动参考
+            currentBird.anchorX = CONFIG.slingshotX;
+            currentBird.anchorY = CONFIG.slingshotY;
 
             Composite.add(world, currentBird);
-
-            // 创建保持约束，让小鸟保持在弹弓上直到被拖动
-            const holdingConstraint = Constraint.create({
-                pointA: { x: CONFIG.slingshotX, y: CONFIG.slingshotY },
-                bodyB: currentBird,
-                stiffness: 1,
-                length: 0,
-                render: { visible: false }
-            });
-            Composite.add(world, holdingConstraint);
-            currentBird.holdingConstraint = holdingConstraint;
+            
+            // 显示提示
+            showHint('拖动小鸟发射！');
 
             // 不立即创建弹弓约束 - 等待拖动时创建
             slingConstraint = null;
@@ -1132,12 +1137,11 @@
         // ==================== 弹弓控制 ====================
         // 拖动状态
         let isDraggingBird = false;
-        let isMousePressed = false;
+        let dragOffset = { x: 0, y: 0 };
         
         function handleMouseDown(e) {
             e.preventDefault();
             e.stopPropagation();
-            isMousePressed = true;
             
             if (!currentBird || isBirdFlying) return;
             
@@ -1159,56 +1163,87 @@
             // 计算画布内的坐标
             const canvas = document.getElementById('gameCanvas');
             const rect = canvas.getBoundingClientRect();
-            
-            // 考虑canvas被CSS缩放的情况
-            const displayWidth = canvas.style.width || rect.width + 'px';
-            const displayHeight = canvas.style.height || rect.height + 'px';
-            
-            const scaleX = CONFIG.canvasWidth / parseFloat(displayWidth);
-            const scaleY = CONFIG.canvasHeight / parseFloat(displayHeight);
+            const displayWidth = parseFloat(canvas.style.width) || rect.width;
+            const displayHeight = parseFloat(canvas.style.height) || rect.height;
+            const scaleX = CONFIG.canvasWidth / displayWidth;
+            const scaleY = CONFIG.canvasHeight / displayHeight;
             
             const clickPos = {
                 x: (clientX - rect.left) * scaleX,
                 y: (clientY - rect.top) * scaleY
             };
             
-            // 简化检查：只要点击位置在小鸟附近就可以开始拖动
+            // 检查是否点击在小鸟附近
             const dist = Vector.magnitude(Vector.sub(clickPos, currentBird.position));
-            console.log('点击距离:', dist, '小鸟位置:', currentBird.position);
+            if (dist > 80) return;
             
-            if (dist > 80) return; // 放宽检测范围
+            // 释放 static 状态，创建弹弓约束
+            Body.setStatic(currentBird, false);
             
-            // 移除保持约束
-            if (currentBird.holdingConstraint) {
-                Composite.remove(world, currentBird.holdingConstraint);
-                currentBird.holdingConstraint = null;
-            }
-            
-            // 开始拖动
-            isDraggingBird = true;
+            // 保存拖动偏移
+            dragOffset = Vector.sub(currentBird.position, clickPos);
             
             // 创建弹弓约束
-            if (!slingConstraint) {
-                slingConstraint = Constraint.create({
-                    pointA: { x: CONFIG.slingshotX, y: CONFIG.slingshotY },
-                    bodyB: currentBird,
-                    stiffness: 0.1,
-                    damping: 0.02,
-                    length: 0,
-                    render: { visible: false }
-                });
-                Composite.add(world, slingConstraint);
-            }
+            slingConstraint = Constraint.create({
+                pointA: { x: currentBird.anchorX, y: currentBird.anchorY },
+                bodyB: currentBird,
+                stiffness: 0.05,
+                damping: 0.01,
+                length: 0,
+                render: { visible: false }
+            });
+            Composite.add(world, slingConstraint);
+            
+            isDraggingBird = true;
+            hideHint();
         }
 
         function handleMouseMove(e) {
+            if (!isDraggingBird || !currentBird) return;
             e.preventDefault();
+            
+            const { Vector, Body } = Matter;
+            
+            // 获取位置
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            const canvas = document.getElementById('gameCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const displayWidth = parseFloat(canvas.style.width) || rect.width;
+            const displayHeight = parseFloat(canvas.style.height) || rect.height;
+            const scaleX = CONFIG.canvasWidth / displayWidth;
+            const scaleY = CONFIG.canvasHeight / displayHeight;
+            
+            const mousePos = {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+            
+            // 限制拖动范围
+            const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
+            let newPos = Vector.add(mousePos, dragOffset);
+            const pullVector = Vector.sub(anchor, newPos);
+            const pullDist = Vector.magnitude(pullVector);
+            
+            if (pullDist > CONFIG.maxPullDistance) {
+                const normalized = Vector.normalise(pullVector);
+                newPos = Vector.sub(anchor, Vector.mult(normalized, CONFIG.maxPullDistance));
+            }
+            
+            Body.setPosition(currentBird, newPos);
+            Body.setVelocity(currentBird, { x: 0, y: 0 });
         }
 
         function handleMouseUp(e) {
             e.preventDefault();
             e.stopPropagation();
-            isMousePressed = false;
             
             // 处理飞行中小鸟的特殊能力激活
             if (currentBird && isBirdFlying && canActivateAbility && currentBird.canActivate) {
@@ -1218,17 +1253,19 @@
             
             if (!currentBird || !isDraggingBird || !slingConstraint) return;
             
+            const { Composite, Vector, Body } = Matter;
             isDraggingBird = false;
-            const { World, Composite, Vector, Body } = Matter;
 
             // 计算发射向量
-            const pullVector = Vector.sub({ x: CONFIG.slingshotX, y: CONFIG.slingshotY }, currentBird.position);
+            const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
+            const pullVector = Vector.sub(anchor, currentBird.position);
             const pullDistance = Vector.magnitude(pullVector);
 
             if (pullDistance < 20) {
                 // 拉距不够，重置小鸟位置
-                Body.setPosition(currentBird, { x: CONFIG.slingshotX, y: CONFIG.slingshotY });
+                Body.setPosition(currentBird, anchor);
                 Body.setVelocity(currentBird, { x: 0, y: 0 });
+                Body.setStatic(currentBird, true);
                 Composite.remove(world, slingConstraint);
                 slingConstraint = null;
                 return;
@@ -1245,7 +1282,6 @@
 
             isBirdFlying = true;
             canActivateAbility = true;
-            currentBird.isDraggable = false;
             usedBirds++;
 
             // 延迟检查小鸟状态
@@ -1550,18 +1586,20 @@
             ctx.fillRect(CONFIG.slingshotX - 8, CONFIG.slingshotY - 60, 16, 80);
 
             // 绘制弹弓皮筋
-            if (currentBird && slingConstraint) {
+            if (currentBird && (slingConstraint || isDraggingBird)) {
+                const anchorX = currentBird.anchorX || CONFIG.slingshotX;
+                const anchorY = currentBird.anchorY || CONFIG.slingshotY;
                 ctx.beginPath();
-                ctx.moveTo(CONFIG.slingshotX - 8, CONFIG.slingshotY - 40);
+                ctx.moveTo(anchorX - 8, anchorY - 40);
                 ctx.lineTo(currentBird.position.x, currentBird.position.y);
-                ctx.lineTo(CONFIG.slingshotX + 8, CONFIG.slingshotY - 40);
+                ctx.lineTo(anchorX + 8, anchorY - 40);
                 ctx.strokeStyle = '#8B0000';
                 ctx.lineWidth = 4;
                 ctx.stroke();
             }
 
             // 绘制轨迹预览
-            if (currentBird && slingConstraint && !isBirdFlying) {
+            if (currentBird && isDraggingBird && !isBirdFlying) {
                 drawTrajectory(ctx);
             }
 
@@ -1699,31 +1737,63 @@
         }
 
         function drawTrajectory(ctx) {
-            const { Vector, Body } = Matter;
+            if (!currentBird || !isDraggingBird) return;
+            
+            const { Vector } = Matter;
 
-            const anchor = { x: CONFIG.slingshotX, y: CONFIG.slingshotY };
+            const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
             const pullVector = Vector.sub(anchor, currentBird.position);
             const pullDistance = Math.min(Vector.magnitude(pullVector), CONFIG.maxPullDistance);
 
-            if (pullDistance < 20) return;
+            if (pullDistance < 15) return;
 
+            // 计算发射速度
             const direction = Vector.normalise(pullVector);
             const force = pullDistance * CONFIG.launchForceMultiplier;
-            const velocity = Vector.mult(direction, force * 1000);
+            const velocity = Vector.mult(direction, force * 800);
+            
+            // 物理参数
+            const gravity = CONFIG.gravity.y * 800;
+            const dt = 0.016;
 
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-
-            for (let t = 0; t < 30; t++) {
-                const x = currentBird.position.x + velocity.x * t * 0.05;
-                const y = currentBird.position.y + velocity.y * t * 0.05 + 0.5 * CONFIG.gravity.y * 500 * (t * 0.05) * (t * 0.05);
-
-                if (y > CONFIG.groundY || x > CONFIG.canvasWidth || x < 0) break;
-
-                const alpha = 1 - t / 30;
-                ctx.fillStyle = `rgba(255,255,255,${alpha * 0.6})`;
+            // 绘制轨迹
+            let x = currentBird.position.x;
+            let y = currentBird.position.y;
+            let vx = velocity.x;
+            let vy = velocity.y;
+            
+            ctx.lineWidth = 3;
+            let prevX = x, prevY = y;
+            
+            for (let t = 0; t < 60; t++) {
+                // 物理模拟
+                x += vx * dt;
+                y += vy * dt;
+                vy += gravity * dt;
+                
+                // 到达地面或边界
+                if (y > CONFIG.groundY - 15 || x > CONFIG.canvasWidth - 10 || x < 10) break;
+                
+                const alpha = 1 - t / 60;
+                const size = 4 + (1 - alpha) * 2;
+                
+                // 轨迹点
+                ctx.fillStyle = `rgba(255,200,0,${alpha})`;
                 ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.arc(x, y, size, 0, Math.PI * 2);
                 ctx.fill();
+                
+                // 连接线
+                if (t > 0) {
+                    ctx.strokeStyle = `rgba(255,200,0,${alpha * 0.5})`;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+                
+                prevX = x;
+                prevY = y;
             }
         }
 

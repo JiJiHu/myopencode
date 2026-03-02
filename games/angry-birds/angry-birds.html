@@ -737,15 +737,23 @@
                 }
             });
 
-            // 创建鼠标控制
+            // 创建鼠标控制 - 允许拖动 static 物体
             const mouse = Mouse.create(canvas);
             mouseConstraint = MouseConstraint.create(engine, {
                 mouse: mouse,
                 constraint: {
                     stiffness: 0.2,
                     render: { visible: false }
+                },
+                // 允许拖动 static 物体
+                collisionFilter: {
+                    mask: 0xffffffff
                 }
             });
+            
+            // 强制 MouseConstraint 可以拖动任何物体
+            mouseConstraint.bodyDrag = null;
+            mouseConstraint.constraint.stiffness = 0.2;
 
             // 将鼠标约束添加到世界中（关键步骤！）
             Composite.add(world, mouseConstraint);
@@ -814,6 +822,76 @@
             // 渲染前事件（自定义绘制）
             Events.on(render, 'beforeRender', beforeRender);
             Events.on(render, 'afterRender', afterRender);
+
+            // 使用 Matter.js MouseConstraint 事件处理弹弓
+            Events.on(mouseConstraint, 'startdrag', function(event) {
+                if (currentBird && !isBirdFlying && event.body === currentBird) {
+                    // 开始拖动小鸟 - 保持 static 并创建弹弓约束
+                    const { Body, Constraint, Composite } = Matter;
+                    
+                    // 创建弹弓约束
+                    if (!slingConstraint) {
+                        slingConstraint = Constraint.create({
+                            pointA: { x: currentBird.anchorX, y: currentBird.anchorY },
+                            bodyB: currentBird,
+                            stiffness: 0.05,
+                            damping: 0.02,
+                            length: 0,
+                            render: { visible: false }
+                        });
+                        Composite.add(world, slingConstraint);
+                    }
+                    
+                    isDraggingBird = true;
+                    hideHint();
+                }
+            });
+            
+            Events.on(mouseConstraint, 'enddrag', function(event) {
+                if (isDraggingBird && currentBird && event.body === currentBird) {
+                    const { Body, Composite, Vector } = Matter;
+                    
+                    isDraggingBird = false;
+                    
+                    // 移除弹弓约束
+                    if (slingConstraint) {
+                        Composite.remove(world, slingConstraint);
+                        slingConstraint = null;
+                    }
+                    
+                    // 计算发射向量
+                    const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
+                    const pullVector = Vector.sub(anchor, currentBird.position);
+                    const pullDistance = Vector.magnitude(pullVector);
+                    
+                    // 拉距不够，重置
+                    if (pullDistance < 20) {
+                        Body.setPosition(currentBird, anchor);
+                        return;
+                    }
+                    
+                    // 释放 static 状态
+                    Body.setStatic(currentBird, false);
+                    
+                    // 施加发射力
+                    const force = Vector.mult(Vector.normalise(pullVector), pullDistance * CONFIG.launchForceMultiplier);
+                    Body.applyForce(currentBird, currentBird.position, force);
+                    
+                    isBirdFlying = true;
+                    canActivateAbility = true;
+                    usedBirds++;
+                    
+                    setTimeout(checkBirdStatus, 500);
+                }
+            });
+            
+            // 移除手动的事件监听器，因为现在用 MouseConstraint 事件
+            canvas.removeEventListener('mousedown', handleMouseDown);
+            canvas.removeEventListener('mouseup', handleMouseUp);
+            canvas.removeEventListener('mousemove', handleMouseMove);
+            canvas.removeEventListener('touchstart', handleMouseDown);
+            canvas.removeEventListener('touchend', handleMouseUp);
+            canvas.removeEventListener('touchmove', handleMouseMove);
 
             // 启动引擎和渲染器
             runner = Runner.create();
@@ -1089,14 +1167,14 @@
             const birdType = birdsQueue.shift();
             const birdData = BIRD_TYPES[birdType];
 
-            // 创建小鸟（临时 static，等玩家拖动时再释放）
+            // 创建小鸟 - 使用 isStatic 但可以用 MouseConstraint 拖动
             currentBird = Bodies.circle(
                 CONFIG.slingshotX,
                 CONFIG.slingshotY,
                 birdData.radius,
                 {
                     label: 'bird',
-                    isStatic: true, // 固定小鸟直到被拖动
+                    isStatic: true,
                     render: {
                         fillStyle: birdData.color,
                         strokeStyle: birdData.borderColor || '#000000',
@@ -1109,7 +1187,11 @@
                     restitution: 0.5,
                     friction: 0.5,
                     density: 0.004,
-                    frictionAir: 0.001
+                    frictionAir: 0.001,
+                    // 允许 MouseConstraint 拖动 static 物体
+                    plugin: {
+                        dragBody: true
+                    }
                 }
             );
 
@@ -1117,8 +1199,6 @@
             currentBird.birdData = birdData;
             currentBird.originalRadius = birdData.radius;
             currentBird.canActivate = true;
-            currentBird.isDraggable = true;
-            // 保存弹弓位置作为拖动参考
             currentBird.anchorX = CONFIG.slingshotX;
             currentBird.anchorY = CONFIG.slingshotY;
 
@@ -1127,8 +1207,11 @@
             // 显示提示
             showHint('拖动小鸟发射！');
 
-            // 不立即创建弹弓约束 - 等待拖动时创建
-            slingConstraint = null;
+            // 清除之前的弹弓约束
+            if (slingConstraint) {
+                Composite.remove(world, slingConstraint);
+                slingConstraint = null;
+            }
 
             isBirdFlying = false;
             canActivateAbility = false;
@@ -1583,7 +1666,7 @@
             }
 
             // 绘制轨迹预览
-            if (currentBird && isDraggingBird && !isBirdFlying) {
+            if (currentBird && isDraggingBird && !isBirdFlying && slingConstraint) {
                 drawTrajectory(ctx);
             }
 

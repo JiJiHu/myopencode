@@ -704,10 +704,24 @@
         }
 
         function initLevel(levelData) {
-            Composite.clear(world);
+            // 只清除非静态物体（猪、鸟、建筑物），保留地面和鼠标控制
+            const bodies = Composite.allBodies(world);
+            bodies.forEach(body => {
+                if (!body.isStatic) {
+                    Composite.remove(world, body);
+                }
+            });
+            
+            // 清除所有约束（弹弓）
+            const constraints = Composite.allConstraints(world);
+            constraints.forEach(c => {
+                if (c.label !== 'Mouse Constraint') {
+                    Composite.remove(world, c);
+                }
+            });
             
             score = 0;
-            isFiring = false;
+            firingMode = false;
             pigs = [];
             blocks = [];
             birdsQueue = [...levelData.pigs.length > 2 ? ['red','red','red'] : ['red','red']];

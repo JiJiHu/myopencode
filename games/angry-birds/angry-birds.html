@@ -1137,7 +1137,6 @@
         // ==================== 弹弓控制 ====================
         // 拖动状态
         let isDraggingBird = false;
-        let isDragStarted = false;
         
         function handleMouseDown(e) {
             e.preventDefault();
@@ -1173,19 +1172,16 @@
                 y: (clientY - rect.top) * scaleY
             };
             
-            // 检查是否点击在小鸟附近
+            // 检查是否点击在小鸟附近（80像素内）
             const dist = Vector.magnitude(Vector.sub(clickPos, currentBird.position));
             if (dist > 80) return;
             
-            // 释放 static 状态
-            Body.setStatic(currentBird, false);
             isDraggingBird = true;
-            isDragStarted = false;
             hideHint();
         }
 
         function handleMouseMove(e) {
-            if (!isDraggingBird || !currentBird) return;
+            if (!isDraggingBird || !currentBird || isBirdFlying) return;
             e.preventDefault();
             
             const { Vector, Body } = Matter;
@@ -1215,23 +1211,20 @@
             // 锚点位置
             const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
             
-            // 计算拖动向量（反向：往后拉才能往前射）
-            let pullVector = Vector.sub(anchor, mousePos);
-            let pullDist = Vector.magnitude(pullVector);
+            // 计算拖动向量（鼠标位置相对于锚点）
+            let dragVector = Vector.sub(mousePos, anchor);
+            let dragDist = Vector.magnitude(dragVector);
             
             // 限制最大拖动距离
-            if (pullDist > CONFIG.maxPullDistance) {
-                pullVector = Vector.mult(Vector.normalise(pullVector), CONFIG.maxPullDistance);
-                pullDist = CONFIG.maxPullDistance;
-            }
+            dragDist = Math.min(dragDist, CONFIG.maxPullDistance);
             
-            // 设置小鸟位置（向后拉）
-            const newPos = Vector.sub(anchor, pullVector);
+            // 计算新位置（在锚点的相反方向，模拟拉弹弓）
+            const direction = Vector.normalise(dragVector);
+            const newPos = Vector.sub(anchor, Vector.mult(direction, dragDist));
+            
+            // 保持 static，直接设置位置
             Body.setPosition(currentBird, newPos);
             Body.setVelocity(currentBird, { x: 0, y: 0 });
-            Body.setAngularVelocity(currentBird, 0);
-            
-            isDragStarted = true;
         }
 
         function handleMouseUp(e) {
@@ -1248,33 +1241,25 @@
                 return;
             }
             
-            if (!isDraggingBird || !isDragStarted) {
-                // 如果没有开始拖动，重置位置
-                Body.setPosition(currentBird, { 
-                    x: currentBird.anchorX, 
-                    y: currentBird.anchorY 
-                });
-                Body.setStatic(currentBird, true);
-                isDraggingBird = false;
-                return;
-            }
+            if (!isDraggingBird) return;
             
             isDraggingBird = false;
-
-            // 计算发射向量
+            
             const anchor = { x: currentBird.anchorX, y: currentBird.anchorY };
             const pullVector = Vector.sub(anchor, currentBird.position);
             const pullDistance = Vector.magnitude(pullVector);
 
+            // 拉距不够，重置
             if (pullDistance < 15) {
-                // 拉距不够，重置
                 Body.setPosition(currentBird, anchor);
                 Body.setVelocity(currentBird, { x: 0, y: 0 });
-                Body.setStatic(currentBird, true);
                 return;
             }
 
-            // 应用发射力
+            // 释放 static 状态，启用物理
+            Body.setStatic(currentBird, false);
+            
+            // 施加发射力
             const clampedDistance = Math.min(pullDistance, CONFIG.maxPullDistance);
             const force = Vector.mult(Vector.normalise(pullVector), clampedDistance * CONFIG.launchForceMultiplier);
             Body.applyForce(currentBird, currentBird.position, force);

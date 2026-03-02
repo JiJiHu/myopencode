@@ -531,40 +531,71 @@
             render.mouse = mouse;
 
             // 监听拖动结束事件 (参考 emjose/slingshot)
+            let firingMode = false;
+            let lastFiringCheck = 0;
+            
             Events.on(mouseConstraint, 'enddrag', function(e) {
                 if (e.body === currentBird) {
-                    isFiring = true;
+                    firingMode = true;
+                    lastFiringCheck = Date.now();
                 }
             });
 
-            // 检查小鸟是否回到原点
+            // 检查小鸟状态 (参考 emjose/slingshot)
             Events.on(engine, 'afterUpdate', function() {
-                if (isFiring && currentBird) {
-                    const dist = Vector.magnitude(Vector.sub(
-                        { x: CONFIG.slingshotX, y: CONFIG.slingshotY },
-                        currentBird.position
-                    ));
-                    
-                    // 如果小鸟被弹回来了，重新加载
-                    if (dist < 25) {
-                        loadNextBird();
-                        isFiring = false;
-                    }
+                if (!currentBird || !firingMode) return;
+                
+                // 至少等待1秒后再检测，让小鸟有时间飞出去攻击
+                if (Date.now() - lastFiringCheck < 1000) return;
+                
+                // 计算小鸟速度
+                const speed = currentBird.velocity ? 
+                    Math.sqrt(currentBird.velocity.x ** 2 + currentBird.velocity.y ** 2) : 0;
+                
+                // 小鸟已经静止或非常慢
+                if (speed < 0.5) {
+                    loadNextBird();
+                    firingMode = false;
                 }
             });
 
             World.add(world, mouseConstraint);
 
-            // 碰撞检测
+            // 碰撞检测 - 检测小鸟和猪的碰撞
             Events.on(engine, 'collisionStart', function(event) {
                 event.pairs.forEach(pair => {
                     const bodyA = pair.bodyA;
                     const bodyB = pair.bodyB;
                     
-                    if (bodyA.label === 'pig') removePig(bodyA);
-                    if (bodyB.label === 'pig') removePig(bodyB);
+                    // 检测小鸟撞猪
+                    if ((bodyA.label === 'bird' && bodyB.label === 'pig') || 
+                        (bodyB.label === 'bird' && bodyA.label === 'pig')) {
+                        const bird = bodyA.label === 'bird' ? bodyA : bodyB;
+                        const pig = bodyA.label === 'pig' ? bodyA : bodyB;
+                        
+                        // 计算碰撞速度
+                        const speed = Math.sqrt(bird.velocity.x ** 2 + bird.velocity.y ** 2);
+                        
+                        // 速度大于3才造成伤害
+                        if (speed > 3) {
+                            removePig(pig);
+                        }
+                    }
+                    
+                    // 检测猪是否掉出屏幕或撞到地面
+                    if (bodyA.label === 'pig') checkPigOut(bodyA);
+                    if (bodyB.label === 'pig') checkPigOut(bodyB);
                 });
             });
+
+            function checkPigOut(pig) {
+                // 猪掉出屏幕或碰到地面
+                if (pig.position.y > CONFIG.groundY || 
+                    pig.position.x < 0 || 
+                    pig.position.x > CONFIG.canvasWidth) {
+                    removePig(pig);
+                }
+            }
 
             // 渲染背景
             Events.on(render, 'beforeRender', function() {

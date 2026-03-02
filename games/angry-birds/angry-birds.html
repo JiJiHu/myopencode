@@ -604,10 +604,10 @@
             });
 
             function checkPigOut(pig) {
-                // 猪掉出屏幕或碰到地面
-                if (pig.position.y > CONFIG.groundY || 
-                    pig.position.x < 0 || 
-                    pig.position.x > CONFIG.canvasWidth) {
+                // 猪掉出屏幕底部或左右边界
+                if (pig.position.y > CONFIG.canvasHeight ||
+                    pig.position.x < -50 || 
+                    pig.position.x > CONFIG.canvasWidth + 50) {
                     removePig(pig);
                 }
             }

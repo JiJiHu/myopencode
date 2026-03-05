@@ -1,2 +1,3 @@
 .vercel
 games/angry-birds/resources.zip
+.env*.local

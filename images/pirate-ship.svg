@@ -1,0 +1,43 @@
+<svg width="300" height="280" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+    <!-- 船体 -->
+    <path d="M40,200 L60,240 L240,240 L260,200 L220,200 L80,200 Z"
+  fill="#8B4513" stroke="#654321" stroke-width="3"/>
+
+    <!-- 船身装饰 -->
+    <rect x="50" y="200" width="200" height="10" fill="#CD853F"/>
+
+    <!-- 甲板 -->
+    <rect x="70" y="190" width="160" height="10" fill="#DEB887"/>
+
+    <!-- 桅杆 -->
+    <rect x="145" y="50" width="10" height="145" fill="#654321"/>
+
+    <!-- 主帆 -->
+    <path d="M155,55 L200,180 L110,180 Z"
+  fill="#F5F5DC" stroke="#D4AF37" stroke-width="2"/>
+    <circle cx="155" cy="120" r="25" fill="#000" opacity="0.8"/>
+    <text x="155" y="128" text-anchor="middle" fill="white" font-size="30" font-weight="bold">☠</text>
+
+    <!-- 后帆 -->
+    <path d="M145,60 L180,140 L130,140 Z"
+  fill="#F5F5DC" stroke="#D4AF37" stroke-width="1.5"/>
+    <text x="150" y="105" text-anchor="middle" fill="#8B4513" font-size="12">ONE</text>
+    <text x="150" y="118" text-anchor="middle" fill="#8B4513" font-size="12">PIECE</text>
+
+    <!-- 船头 -->
+    <path d="M40,200 Q20,200 25,180 Q35,190 45,195" fill="#654321"/>
+
+    <!-- 窗户 -->
+    <circle cx="80" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
+    <circle cx="110" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
+    <circle cx="190" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
+    <circle cx="220" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
+
+    <!-- 旗帜 -->
+    <path d="M155,55 L195,40 L195,70 Z" fill="#000"/>
+    <text x="172" y="56" text-anchor="middle" fill="white" font-size="16">☠</text>
+
+    <!-- 大炮 -->
+    <ellipse cx="70" cy="230" rx="15" ry="8" fill="#4A4A4A"/>
+    <ellipse cx="230" cy="230" rx="15" ry="8" fill="#4A4A4A"/>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "name": "海贼小游戏合集",
+  "short_name": "海贼游戏",
+  "description": "海贼王主题小游戏合集 - 贪吃蛇、五子棋、塔防等",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#d4a84b",
+  "icons": [
+    {
+      "src": "/images/pirate-ship.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

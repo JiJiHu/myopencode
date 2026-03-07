@@ -56,7 +56,7 @@ body {
 }
 
 /* 海盗船容器 */
-.pirate-ship-container {
+.pirate-ship-container, .pirate-ship-container img {
     position: fixed;
     bottom: 80px;
     right: 10%;
@@ -461,7 +461,7 @@ body {
         right: 20px;
     }
 
-    .pirate-ship-container {
+    .pirate-ship-container, .pirate-ship-container img {
         transform: scale(0.5);
         right: 20px;
     }

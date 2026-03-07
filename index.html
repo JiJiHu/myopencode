@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏴‍☠️ 海贼小游戏合集 v2.0</title>
     <link rel="stylesheet" href="onepage-home.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <!-- 漂浮的宝藏元素 -->
@@ -27,66 +28,8 @@
 
     <!-- 海盗船 -->
     <div class="pirate-ship-container">
-        <svg width="300" height="280" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
-            <!-- 船体 -->
-            <path d="M40,200 L60,240 L240,240 L260,200 L220,200 L80,200 Z"
-                  fill="#8B4513" stroke="#654321" stroke-width="3"/>
-
-            <!-- 船身装饰 -->
-            <rect x="50" y="200" width="200" height="10" fill="#CD853F"/>
-
-            <!-- 甲板 -->
-            <rect x="70" y="190" width="160" height="10" fill="#DEB887"/>
-
-            <!-- 桅杆 -->
-            <rect x="145" y="50" width="10" height="145" fill="#654321"/>
-
-            <!-- 主帆 -->
-            <path d="M155,55 L200,180 L110,180 Z"
-                  fill="#F5F5DC" stroke="#D4AF37" stroke-width="2"/>
-            <circle cx="155" cy="120" r="25" fill="#000" opacity="0.8"/>
-            <text x="155" y="128" text-anchor="middle" fill="white" font-size="30" font-weight="bold">☠</text>
-
-            <!-- 后帆 -->
-            <path d="M145,60 L180,140 L130,140 Z"
-                  fill="#F5F5DC" stroke="#D4AF37" stroke-width="1.5"/>
-            <text x="150" y="105" text-anchor="middle" fill="#8B4513" font-size="12">ONE</text>
-            <text x="150" y="118" text-anchor="middle" fill="#8B4513" font-size="12">PIECE</text>
-
-            <!-- 船头 -->
-            <path d="M40,200 Q20,200 25,180 Q35,190 45,195" fill="#654321"/>
-
-            <!-- 窗户 -->
-            <circle cx="80" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
-            <circle cx="110" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
-            <circle cx="190" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
-            <circle cx="220" cy="215" r="8" fill="#006699" stroke="#4A4A4A" stroke-width="2"/>
-
-            <!-- 旗帜 -->
-            <path d="M155,55 L195,40 L195,70 Z" fill="#000"/>
-            <text x="172" y="56" text-anchor="middle" fill="white" font-size="16">☠</text>
-
-            <!-- 大炮 -->
-            <ellipse cx="70" cy="230" rx="15" ry="8" fill="#4A4A4A"/>
-            <ellipse cx="230" cy="230" rx="15" ry="8" fill="#4A4A4A"/>
-        </svg>
+        <img src="images/pirate-ship.svg" alt="Pirate Ship">
     </div>
-
-    <!-- 主要内容区 -->
-    <div class="main-hero">
-        <!-- 英雄区域 -->
-        <div class="hero-section">
-            <h1 class="hero-title">🏴‍☠️ 海贼小游戏合集</h1>
-            <h2 class="hero-subtitle">冒险，从这里开始！</h2>
-            <p class="hero-welcome">
-                欢迎来到新世界的水域，勇敢的冒险者！<br>
-                选择你的游戏，踏上寻找宝藏的旅程。
-                每一个游戏都是一次新的冒险，每一次挑战都是成长的机会。
-            </p>
-        </div>
-
-        <!-- 游戏卡片区域 -->
-        <div class="games-section">
             <!-- 贪吃蛇游戏 -->
             <div class="game-card" onclick="location.href='games/snake/snake.html'">
                 <div class="corner-nail"></div>
@@ -454,7 +397,33 @@
     <footer style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
         © 2026 MyGame - All rights reserved
     <div id="test-badge">Tested by OpenCode</div>
-</footer>
     <div id="test-badge">Tested by OpenCode</div>
+    <script>
+        // Lazy loading for game cards
+        document.addEventListener("DOMContentLoaded", function() {
+            const lazyCards = document.querySelectorAll(".lazy-card");
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const card = entry.target;
+                        const onclick = card.dataset.onclick;
+                        if (onclick) {
+                            card.onclick = new Function(onclick);
+                            card.classList.remove("lazy-card");
+                            observer.unobserve(card);
+                        }
+                    }
+                });
+            }, { rootMargin: "50px" });
+            
+            lazyCards.forEach(card => observer.observe(card));
+        });
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/sw.js");
+        }
+    </script>
 </body>
 </html>

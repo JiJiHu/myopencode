@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Node.js (not needed for static nginx)
+node_modules
+package.json
+package-lock.json
+
+# Vercel config
+.vercel
+vercel.json
+vercel.json.backup
+
+# Backup files
+*.backup*
+*.bak
+
+# Python files
+*.py
+fibonacci.py
+hello.py
+test.py
+
+# Scripts that aren't needed in container
+start-server.sh
+start-leaderboard.sh
+stop-server.sh
+stop-leaderboard.sh
+
+# Development files
+.env.local
+
+# Documentation (optional - can be excluded to reduce size)
+IMPLEMENTATION_PLAN.md
+PROMPT.md
+AGENTS.md
+
+# Game development docs
+games/CHANGELOG.md
+games/CODE-REVIEW-REPORT.md
+games/GAME-ANALYSIS.md
+games/GAME_LOGIC_BUG_REPORT.md
+games/OPERATIONS.md
+games/OPTIMIZATION-REPORT.md
+games/PORT-MERGE.md
+games/bug_report.md
+games/answer.txt
+games/games-success.txt

@@ -146,6 +146,38 @@ python3 -m http.server 8000
 # 访问 http://localhost:8000
 ```
 
+### Docker 部署 (推荐)
+
+```bash
+# 1. 构建镜像
+docker build -t mygame:latest .
+
+# 2. 运行容器
+docker run -d -p 8080:80 --name mygame mygame:latest
+
+# 3. 访问游戏
+# http://localhost:8080
+```
+
+#### 使用 docker-compose (更方便)
+
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+#### 访问地址
+- 主站: http://localhost:8080
+- 贪吃蛇: http://localhost:8080/games/snake/snake.html
+- 五子棋: http://localhost:8080/games/gomoku/gomoku.html
+
+
 ---
 
 ## 📝 技术栈

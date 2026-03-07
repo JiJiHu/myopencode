@@ -5,6 +5,8 @@
 		<title>Angry Birds</title>
 		<style>
 			html,body{background-color:black;height:100%;padding:0;margin:0;overflow:hidden;touch-action:none;-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+			.home-btn{position:fixed;top:15px;left:15px;width:44px;height:44px;background:rgba(255,255,255,0.9);border:2px solid #ff6b6b;border-radius:50%;cursor:pointer;font-size:22px;z-index:1000;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+			.home-btn:hover{background:#ff6b6b;color:white;transform:scale(1.1)}
 			#content{position:fixed;height:100%;width:100%;margin:0;padding:0;z-index:99}
 			.pleasewait{position:fixed;width:64px;height:64px;left:0;right:0;top:0;bottom:0;margin:auto auto;border:0;z-index:9}
 			.lds-spinner{color:white;display:inline-block;position:relative;width:64px;height:64px}
@@ -28,6 +30,7 @@
 	<body>
 		<div class="pleasewait" id="loading"><div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
 		<div id="content" oncontextmenu="return false;"></div>
+		<button class="home-btn" onclick="location.href='../../index.html'" title="返回主页">🏠</button>
 		<script src="AngryBirdsGame.js"></script>
 	</body>
 </html>

@@ -1,7 +1,7 @@
     
-        // Canvas setup
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // Canvas setup - will be initialized after DOM loads
+        let canvas = null;
+        let ctx = null;
         
         // Game state
         let gameState = 'menu'; // menu, playing, paused, gameover
@@ -1246,6 +1246,8 @@
         
         // Initialize - wait for DOM to load
         document.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
             resizeCanvas();
             initPath();
             draw();

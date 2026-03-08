@@ -1244,8 +1244,10 @@
             }
         });
         
-        // Initialize
-        resizeCanvas();
-        initPath();
-        draw();
+        // Initialize - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            initPath();
+            draw();
+        });
     

@@ -573,8 +573,6 @@ function initGrid() {
   const mapping = {};
   const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   for (let i = nums.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [nums[i], nums[j]] = [nums[j], nums[i]];
     const j = Math.floor(Math.random() * (i + 1));
     [nums[i], nums[j]] = [nums[j], nums[i]];
   }
@@ -1050,9 +1048,11 @@ function loadPuzzle() {
             }
         });
 
-        // 初始化游戏
-        initGrid();
-        restartGame();
+        // 初始化游戏 - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', () => {
+            initGrid();
+            restartGame();
+        });
 
         // 返回主页
         function goBackHome() {

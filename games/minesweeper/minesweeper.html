@@ -6,6 +6,10 @@
     <title>扫雷海战 | One Piece 游戏网站</title>
     <link rel="stylesheet" href="../../onepiece-theme.css">
     <style>
+        /* 全局字体设置 - 确保中文显示 */
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', system-ui, -apple-system, sans-serif;
+        }
         .game-container {
             max-width: 800px;
             margin: 0 auto;
@@ -330,18 +334,18 @@
                 font-size: 14px !important;
             }
 
-            /* 高级模式在手机端使用更小的格子 */
+            /* 高级模式在手机端使用更小的格子 - 375px屏幕 / 30列 = 12.5px */
             .game-board.expert .cell {
-                width: 20px !important;
-                height: 20px !important;
-                font-size: 10px !important;
+                width: 12px !important;
+                height: 12px !important;
+                font-size: 8px !important;
             }
 
-            /* 中级模式在手机端使用较小的格子 */
+            /* 中级模式在手机端使用较小的格子 - 375px屏幕 / 16列 = 23px */
             .game-board.intermediate .cell {
-                width: 24px !important;
-                height: 24px !important;
-                font-size: 12px !important;
+                width: 22px !important;
+                height: 22px !important;
+                font-size: 11px !important;
             }
 
             .info-value {
